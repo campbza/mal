@@ -6,4 +6,7 @@
   ;;   lein with-profile stepX repl
   :profiles {:step0 {:main clj-mal.step0-repl
                      :uberjar-name "step0_repl.jar"
-                     :aot [clj-mal.step0-repl]}})
+                     :aot [clj-mal.step0-repl]}
+             :step1 {:main clj-mal.step1-read-print
+                     :uberjar-name "step1_read_print.jar"
+                     :aot [clj-mal.step1-read-print]}})
