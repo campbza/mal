@@ -64,7 +64,6 @@
                  (:form (read-form (update rdr :position inc)))
                  (:form rdr)))))
 
-;; TODO: "^" still does not work...
 (defn read-special-form [rdr token]
   (if (= "^" token)
     (read-meta rdr)
@@ -92,6 +91,7 @@
                                                       unescape))
       (re-seq badstr-re token)  (throw (Exception.
                                         (str "expected '\"', got EOF")))
+      (= \: (first token))      (assoc rdr :form (keyword (subs token 1)))
       :else                     (assoc rdr :form (symbol token)))))
 
 (defn reader [tokens]
