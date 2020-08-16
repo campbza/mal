@@ -9,4 +9,7 @@
                      :aot [clj-mal.step0-repl]}
              :step1 {:main clj-mal.step1-read-print
                      :uberjar-name "step1_read_print.jar"
-                     :aot [clj-mal.step1-read-print]}})
+                     :aot [clj-mal.step1-read-print]}
+             :step2 {:main clj-mal.step2-eval
+                     :uberjar-name "step2_eval.jar"
+                     :aot [clj-mal.step2-eval]}})
