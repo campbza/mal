@@ -16,9 +16,19 @@
       (s/replace "\u029e" "\\")))
 
 (def seq-start->end {"(" ")", "{" "}", "[" "]"})
-(def seq-type->fn {"(" (partial apply list)
-                   "[" (partial vec)
-                   "{" (partial apply hash-map)})
+
+(def seq-type->fn
+  {"(" (partial apply list)
+   "[" (partial vec)
+   "{" (partial apply hash-map)})
+
+(def special-forms
+  {"'"  'quote
+   "`"  'quasiquote
+   "~"  'unquote
+   "~@" 'splice-unquote
+   "@"  'deref
+   "^"  'with-meta})
 
 (defn tokenize [s]
   (map second (re-seq token-regex s)))
@@ -47,65 +57,31 @@
            :form ((seq-type->fn token) (:form rdr))
            :position (:position rdr))))
 
+(defn read-meta [rdr]
+  (let [rdr (read-form (update rdr :position inc))]
+    (assoc rdr :form
+           (list 'with-meta
+                 (:form (read-form (update rdr :position inc)))
+                 (:form rdr)))))
+
+;; TODO: "^" still does not work...
+(defn read-special-form [rdr token]
+  (if (= "^" token)
+    (read-meta rdr)
+    (let [form (-> rdr
+                   (update :position inc)
+                   read-form
+                   :form
+                   ((partial list (special-forms token))))]
+      (-> rdr
+          (assoc :form form)
+          (update :position inc)))))
+
 (defn read-form [{:keys [tokens position] :as rdr}]
   (let [token (nth tokens position nil)
         seq-starts (set (keys seq-start->end))]
     (cond
-      (= "'" token)             (update (assoc rdr
-                                               :form
-                                               (list 'quote
-                                                     (-> rdr
-                                                         (update :position inc)
-                                                         read-form
-                                                         :form)))
-                                        :position
-                                        inc)
-      (= "`" token)             (update (assoc rdr
-                                               :form
-                                               (list 'quasiquote
-                                                     (-> rdr
-                                                         (update :position inc)
-                                                         read-form
-                                                         :form)))
-                                        :position
-                                        inc)
-      (= "~" token)             (update (assoc rdr
-                                               :form
-                                               (list 'unquote
-                                                     (-> rdr
-                                                         (update :position inc)
-                                                         read-form
-                                                         :form)))
-                                        :position
-                                        inc)
-      (= "~@" token)            (update (assoc rdr
-                                               :form
-                                               (list 'splice-unquote
-                                                     (-> rdr
-                                                         (update :position inc)
-                                                         read-form
-                                                         :form)))
-                                        :position
-                                        inc)
-      (= "^" token)             (let [rdr (read-form (update rdr
-                                                             :position
-                                                             inc))]
-                                  (assoc rdr
-                                         :form
-                                         (list 'with-meta
-                                               (-> rdr
-                                                   (update :position inc)
-                                                   read-form
-                                                   :form))))
-      (= "@" token)             (update (assoc rdr
-                                               :form
-                                               (list 'deref
-                                                     (-> rdr
-                                                         (update :position inc)
-                                                         read-form
-                                                         :form)))
-                                        :position
-                                        inc)
+      (special-forms token)     (read-special-form rdr token)
       (seq-starts token)        (read-seq rdr token)
       (re-seq int-regex token)  (assoc rdr :form (Integer/parseInt token))
       (= "nil" token)           (assoc rdr :form nil)
