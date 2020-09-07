@@ -39,17 +39,17 @@
   (let [{:keys [tokens position]}
         (update rdr :position inc)]
     (loop [lst []
-           p position]
+           p   position]
       (let [token (nth tokens p nil)]
         (cond
-          (= token end) {:tokens tokens
+          (= token end) {:tokens   tokens
                          :position p
-                         :form lst}
-          (not token) (throw (Exception.
-                              (str "expected '" end "', got EOF")))
-          :else (let [rdr (read-form (assoc rdr :position p))]
-                  (recur (conj lst (:form rdr))
-                         (inc (:position rdr)))))))))
+                         :form     lst}
+          (not token)   (throw (Exception.
+                                (str "expected '" end "', got EOF")))
+          :else         (let [rdr (read-form (assoc rdr :position p))]
+                          (recur (conj lst (:form rdr))
+                                 (inc (:position rdr)))))))))
 
 (defn read-seq [rdr token]
   (let [rdr (read-list rdr (seq-start->end token))]
