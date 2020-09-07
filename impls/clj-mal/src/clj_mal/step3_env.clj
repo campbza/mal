@@ -15,13 +15,15 @@
 
 (defn eval-ast [ast env]
   (cond
-    (symbol? ast) {:form (env ast)
+    (symbol? ast) {:form (env/get-env env ast)
                    :env env}
     (seq? ast)    {:form (eval-coll ast env seq)
                    :env env}
     (vector? ast) {:form (eval-coll ast env vec)
                    :env env}
-    (map? ast)    {:form (eval-coll (apply concat ast) env (partial apply hash-map))
+    (map? ast)    {:form (eval-coll (apply concat ast)
+                                    env
+                                    (partial apply hash-map))
                    :env env}
     :else         {:form ast :env env}))
 
@@ -29,11 +31,16 @@
   (reader/read-str s))
 
 (defn EVAL [ast env]
-  (cond
-    (not (seq? ast)) (eval-ast ast env)
-    (empty? ast)     {:form ast :env env}
-    :else            (let [{:keys [form env]} (eval-ast ast env)]
-                       {:form (apply (first form) (rest form)) :env env})))
+  (if-not (seq? ast)
+    (eval-ast ast env)
+    (let [[x0 x1 x2] ast]
+      (cond
+        (empty? ast) {:form ast :env env}
+        (= 'def! x0) (let [{:keys [form env]} (EVAL x2 env)]
+                       {:form form
+                        :env (env/set-env env x1 form)})
+        :else        (let [{:keys [form env]} (eval-ast ast env)]
+                       {:form (apply (first form) (rest form)) :env env})))))
 
 #_(EVAL (READ "(+ 5 6)") repl-env)
 
