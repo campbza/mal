@@ -31,20 +31,33 @@
 (defn READ [& [s]]
   (reader/read-str s))
 
+(defn update-env [{:keys [form env] :as m} k]
+  (println 111111111 m)
+  {:form form
+   :env (env/set-env env k form)})
+
+(defn eval-def [x1 x2 env]
+  (try
+    (-> x2
+        (EVAL env)
+        (update-env x1))
+    (catch Throwable e
+      (cr/pst e)
+      {:env env
+       :form nil})))
+
 (defn EVAL [ast env]
   (if-not (seq? ast)
     (eval-ast ast env)
     (let [[x0 x1 x2] ast]
       (cond
         (empty? ast) {:form ast :env env}
-        (= 'def! x0) (let [{:keys [form env]} (EVAL x2 env)]
-                       {:form form
-                        :env (env/set-env env x1 form)})
+        (= 'def! x0) (eval-def x1 x2 env)
         (= 'let* x0) (let [bindings (partition 2 x1)
                            new-env
                            (reduce (fn [acc [k v]]
                                      (assoc acc k (:form (EVAL v acc))))
-                                   (env/env env)
+                                   (env/make-env env)
                                    bindings)]
                        {:form (:form (EVAL x2 new-env))
                         :env env})
@@ -74,8 +87,8 @@
 
 ;;repl loop
 (defn repl-loop []
-  (println "user> ")
   (loop [env repl-env]
+    (println "user> ")
     (let [line (read-line)]
       (when line
         (let [{:keys [form env]} (rep line env)]
