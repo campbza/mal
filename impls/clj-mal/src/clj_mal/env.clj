@@ -1,6 +1,6 @@
 (ns clj-mal.env)
 
-#_(defn env [& [outer]] {:outer outer})
+(defn env [& [outer]] {:outer outer})
 
 (defn set-env [env k v] (assoc env k v))
 

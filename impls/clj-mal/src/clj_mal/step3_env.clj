@@ -25,7 +25,8 @@
                                     env
                                     (partial apply hash-map))
                    :env env}
-    :else         {:form ast :env env}))
+    :else         {:form ast
+                   :env env}))
 
 (defn READ [& [s]]
   (reader/read-str s))
@@ -39,10 +40,19 @@
         (= 'def! x0) (let [{:keys [form env]} (EVAL x2 env)]
                        {:form form
                         :env (env/set-env env x1 form)})
+        (= 'let* x0) (let [bindings (partition 2 x1)
+                           new-env
+                           (reduce (fn [acc [k v]]
+                                     (assoc acc k (:form (EVAL v acc))))
+                                   (env/env env)
+                                   bindings)]
+                       {:form (:form (EVAL x2 new-env))
+                        :env env})
         :else        (let [{:keys [form env]} (eval-ast ast env)]
-                       {:form (apply (first form) (rest form)) :env env})))))
+                       {:form (apply (first form) (rest form))
+                        :env env})))))
 
-#_(EVAL (READ "(+ 5 6)") repl-env)
+#_(EVAL (READ "(let* (c 2) c)") repl-env)
 
 (defn PRINT [{:keys [form env]}]
   {:form (printer/print-string form)
@@ -74,7 +84,3 @@
 
 (defn -main [& args]
   (repl-loop))
-
-(comment
-  (-main)
-  )
