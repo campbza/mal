@@ -1,7 +1,5 @@
 (ns clj-mal.env)
 
-(defn make-env [& [outer]] {:outer outer})
-
 (defn set-env [env k v] (assoc env k v))
 
 (defn env-find [env sym]
@@ -17,3 +15,7 @@
       (e sym)
       (throw (Exception.
               (str "'" sym "' not found"))))))
+
+(defn make-env [& [outer binds exprs]]
+  (merge {:outer outer}
+         (zipmap binds exprs)))
