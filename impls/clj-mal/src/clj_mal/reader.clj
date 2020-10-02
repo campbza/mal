@@ -77,22 +77,23 @@
           (update :position inc)))))
 
 (defn read-form [{:keys [tokens position] :as rdr}]
-  (let [token (nth tokens position nil)
+  (let [token      (nth tokens position nil)
         seq-starts (set (keys seq-start->end))]
     (cond
-      (special-forms token)     (read-special-form rdr token)
-      (seq-starts token)        (read-seq rdr token)
-      (re-seq int-regex token)  (assoc rdr :form (Integer/parseInt token))
-      (= "nil" token)           (assoc rdr :form nil)
-      (#{"true" "false"} token) (assoc rdr :form (symbol token))
-      (re-seq str-re token)     (assoc rdr :form (->> token
-                                                      (re-find str-re)
-                                                      second
-                                                      unescape))
-      (re-seq badstr-re token)  (throw (Exception.
-                                        (str "expected '\"', got EOF")))
-      (= \: (first token))      (assoc rdr :form (keyword (subs token 1)))
-      :else                     (assoc rdr :form (symbol token)))))
+      (special-forms token)    (read-special-form rdr token)
+      (seq-starts token)       (read-seq rdr token)
+      (re-seq int-regex token) (assoc rdr :form (Integer/parseInt token))
+      (= "nil" token)          (assoc rdr :form nil)
+      (= "true" token)         (assoc rdr :form true)
+      (= "false" token)        (assoc rdr :form false)
+      (re-seq str-re token)    (assoc rdr :form (->> token
+                                                     (re-find str-re)
+                                                     second
+                                                     unescape))
+      (re-seq badstr-re token) (throw (Exception.
+                                       (str "expected '\"', got EOF")))
+      (= \: (first token))     (assoc rdr :form (keyword (subs token 1)))
+      :else                    (assoc rdr :form (symbol token)))))
 
 (defn reader [tokens]
   {:tokens (vec tokens) :position 0})

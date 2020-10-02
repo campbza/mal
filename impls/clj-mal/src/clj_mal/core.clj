@@ -1,6 +1,24 @@
-(ns clj-mal.core)
+(ns clj-mal.core
+  (:require [clojure.string :refer [join]]
+            [clj-mal.printer :as printer]))
 
-(defn foo
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
+(def core-ns
+  {'prn    (fn [& args]
+             (->> args
+                  (map #(printer/print-string % true))
+                  (join " ")
+                  println))
+   'list   list
+   'list?  seq?
+   'empty? empty?
+   'count  count
+
+   '+  +
+   '-  -
+   '/  /
+   '*  *
+   '=  =
+   '<  <
+   '>  >
+   '<= <=
+   '>= >=})

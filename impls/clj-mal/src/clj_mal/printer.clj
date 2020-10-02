@@ -8,14 +8,16 @@
       (s/replace "\n" "\\n")))
 
 
-(defn print-string [form]
-  (cond
-    (= nil form)   "nil"
-    (string? form) (str "\"" (escape form) "\"")
-    (list? form)   (str "(" (s/join " " (map print-string form)) ")")
-    (vector? form) (str "[" (s/join " " (map print-string form)) "]")
-    (map? form)    (str "{" (s/join " " (map (fn [[k v]]
-                                               (str (print-string k) " "
-                                                    (print-string v)))
-                                             form)) "}")
-    :else          (str form)))
+(defn print-string
+  ([form] (print-string form true))
+  ([form readable?]
+   (cond
+     (= nil form)   "nil"
+     (string? form) (str "\"" (escape form) "\"")
+     (list? form)   (str "(" (s/join " " (map print-string form)) ")")
+     (vector? form) (str "[" (s/join " " (map print-string form)) "]")
+     (map? form)    (str "{" (s/join " " (map (fn [[k v]]
+                                                (str (print-string k) " "
+                                                     (print-string v)))
+                                              form)) "}")
+     :else          (str form))))

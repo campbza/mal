@@ -1,5 +1,6 @@
 (ns clj-mal.step4-if-fn-do
-  (:require [clj-mal.env :as env]
+  (:require [clj-mal.core :as core]
+            [clj-mal.env :as env]
             [clj-mal.printer :as printer]
             [clj-mal.reader :as reader]
             [clojure.repl :as cr])
@@ -46,6 +47,20 @@
                 last)
             env))
 
+(defn eval-if [condition then-expr else-expr env]
+  (let [condition-val (:form (EVAL condition env))]
+    (if condition-val
+      (EVAL then-expr env)
+      (EVAL else-expr env))))
+
+(defn eval-fn [fn-name body env]
+  {:form (fn [& args]
+           (->> args
+                (env/make-env env fn-name)
+                (EVAL body)
+                :form))
+   :env env})
+
 (defn READ [& [s]]
   (reader/read-str s))
 
@@ -59,18 +74,13 @@
         (= 'let* x0) (eval-let x1 x2 env)
         (= 'do x0)   (eval-do (rest ast) env)
         (= 'if x0)   (eval-if x1 x2 x3 env)
+        (= 'fn* x0)  (eval-fn x1 x2 env)
         :else        (let [m (eval-ast ast env)]
                        (update m :form #(apply (first %)
                                                (rest %))))))))
 
 (defn PRINT [m]
   (update m :form printer/print-string))
-
-(def repl-env
-  {'+ +
-   '- -
-   '* *
-   '/ /})
 
 (defn rep [line env]
   (try
@@ -80,6 +90,10 @@
         PRINT)
     (catch Throwable e (cr/pst e)
            (wrap-res nil env))))
+
+;; FIXEME: Use core for env:
+(def repl-env
+  (reduce ))
 
 ;;repl loop
 (defn repl-loop []
