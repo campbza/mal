@@ -91,13 +91,9 @@
     (catch Throwable e (cr/pst e)
            (wrap-res nil env))))
 
-;; FIXEME: Use core for env:
-(def repl-env
-  (reduce ))
-
 ;;repl loop
 (defn repl-loop []
-  (loop [env (env/make-env repl-env)]
+  (loop [env (env/make-env core/core-ns)]
     (println "user> ")
     (let [line (read-line)]
       (when line

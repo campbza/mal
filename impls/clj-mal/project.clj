@@ -15,4 +15,7 @@
                      :aot [clj-mal.step2-eval]}
              :step3 {:main clj-mal.step3-env
                      :uberjar-name "step3_env.jar"
-                     :aot [clj-mal.step3-env]}})
+                     :aot [clj-mal.step3-env]}
+             :step4 {:main clj-mal.step4-if-fn-do
+                     :uberjar-name "step4_if_fn_do.jar"
+                     :aot [clj-mal.step4-if-fn-do]}})
